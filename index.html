@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DadSleep - Baby Sleep Tracker for Dads | Track Sleep Debt & Share Night Duties</title>
+    <meta name="description" content="The first baby sleep tracker built for dads. Track your sleep debt, log feeds with one tap at 3am, and prove you're doing your fair share with the fairness meter. Coming soon to iOS and Android.">
+    <meta property="og:title" content="DadSleep - Baby Sleep Tracker for Dads">
+    <meta property="og:description" content="Track your sleep debt, log feeds with one tap, and settle the 'I always get up' argument with data.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://dadsleep.33c.dev">
+    <meta property="og:image" content="https://dadsleep.33c.dev/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="DadSleep - Baby Sleep Tracker for Dads">
+    <meta name="twitter:description" content="Track your sleep debt, log feeds with one tap, and settle the 'I always get up' argument with data.">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌙</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-deep: #080C16;
+            --bg-base: #0B0F1A;
+            --bg-card: #12182B;
+            --bg-card-hover: #181F36;
+            --purple: #7C5CFC;
+            --purple-glow: rgba(124, 92, 252, 0.25);
+            --purple-soft: #9B82FC;
+            --blue: #38BDF8;
+            --blue-glow: rgba(56, 189, 248, 0.15);
+            --teal: #2DD4BF;
+            --emerald: #34D399;
+            --emerald-glow: rgba(52, 211, 153, 0.2);
+            --text: #E2E8F0;
+            --text-dim: #94A3B8;
+            --text-faint: #64748B;
+            --border: rgba(148, 163, 184, 0.08);
+            --border-hover: rgba(124, 92, 252, 0.3);
+        }
+
+        html {
+            scroll-behavior: smooth;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg-deep);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* ── Stars background ── */
+        .stars-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ── Layout ── */
+        .container {
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 0 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        section {
+            position: relative;
+        }
+
+        /* ── Nav ── */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 16px 0;
+            transition: background 0.3s, backdrop-filter 0.3s;
+        }
+
+        .nav.scrolled {
+            background: rgba(8, 12, 22, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav .container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--text);
+        }
+
+        .nav-logo-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--purple), var(--blue));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .nav-logo-text {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 20px;
+            letter-spacing: -0.5px;
+        }
+
+        .nav-logo-text span {
+            color: var(--purple-soft);
+        }
+
+        .nav-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 20px;
+            background: var(--purple);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .nav-cta:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 20px var(--purple-glow);
+        }
+
+        /* ── Hero ── */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 120px 0 80px;
+            position: relative;
+        }
+
+        .hero-glow {
+            position: absolute;
+            top: -10%;
+            right: -15%;
+            width: 700px;
+            height: 700px;
+            background: radial-gradient(circle, var(--purple-glow) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: float-glow 8s ease-in-out infinite;
+        }
+
+        .hero-glow-2 {
+            position: absolute;
+            bottom: 0;
+            left: -10%;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, var(--blue-glow) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: float-glow 10s ease-in-out infinite reverse;
+        }
+
+        @keyframes float-glow {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(30px, -20px) scale(1.05); }
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 720px;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(124, 92, 252, 0.1);
+            border: 1px solid rgba(124, 92, 252, 0.2);
+            border-radius: 100px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--purple-soft);
+            margin-bottom: 28px;
+            animation: fade-up 0.8s ease both;
+        }
+
+        .hero-badge-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--emerald);
+            border-radius: 50%;
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.5); }
+        }
+
+        .hero h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: clamp(40px, 6vw, 72px);
+            font-weight: 800;
+            line-height: 1.05;
+            letter-spacing: -2px;
+            margin-bottom: 24px;
+            animation: fade-up 0.8s ease 0.1s both;
+        }
+
+        .hero h1 .highlight {
+            background: linear-gradient(135deg, var(--purple-soft), var(--blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-sub {
+            font-size: 18px;
+            line-height: 1.7;
+            color: var(--text-dim);
+            max-width: 540px;
+            margin-bottom: 40px;
+            animation: fade-up 0.8s ease 0.2s both;
+        }
+
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+            animation: fade-up 0.8s ease 0.3s both;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 16px 32px;
+            background: var(--emerald);
+            color: var(--bg-deep);
+            border: none;
+            border-radius: 14px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px var(--emerald-glow);
+        }
+
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 16px 32px;
+            background: transparent;
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 16px;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--border-hover);
+            background: rgba(124, 92, 252, 0.05);
+        }
+
+        .hero-phone {
+            position: absolute;
+            right: -40px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 320px;
+            height: 640px;
+            animation: fade-up 1s ease 0.5s both;
+        }
+
+        .phone-frame {
+            width: 100%;
+            height: 100%;
+            background: var(--bg-card);
+            border-radius: 40px;
+            border: 2px solid rgba(124, 92, 252, 0.15);
+            box-shadow: 0 30px 80px rgba(0,0,0,0.5), 0 0 60px var(--purple-glow);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .phone-notch {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 140px;
+            height: 30px;
+            background: var(--bg-deep);
+            border-radius: 0 0 20px 20px;
+        }
+
+        .phone-screen {
+            padding: 50px 24px 24px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .phone-time {
+            font-family: 'Outfit', sans-serif;
+            font-size: 14px;
+            color: var(--text-dim);
+            margin-bottom: 30px;
+        }
+
+        .phone-btn {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--purple), #5B3FD4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 8px;
+            box-shadow: 0 0 40px var(--purple-glow), inset 0 2px 4px rgba(255,255,255,0.1);
+            animation: phone-pulse 3s ease-in-out infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes phone-pulse {
+            0%, 100% { box-shadow: 0 0 40px var(--purple-glow), inset 0 2px 4px rgba(255,255,255,0.1); }
+            50% { box-shadow: 0 0 60px rgba(124, 92, 252, 0.4), inset 0 2px 4px rgba(255,255,255,0.1); }
+        }
+
+        .phone-btn-icon {
+            font-size: 36px;
+        }
+
+        .phone-btn-text {
+            font-family: 'Outfit', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .phone-label {
+            font-size: 13px;
+            color: var(--text-faint);
+            margin-bottom: 28px;
+        }
+
+        .phone-toggle {
+            display: flex;
+            background: var(--bg-deep);
+            border-radius: 10px;
+            overflow: hidden;
+            width: 100%;
+            margin-bottom: 24px;
+        }
+
+        .phone-toggle-btn {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-dim);
+        }
+
+        .phone-toggle-btn.active {
+            background: var(--purple);
+            color: white;
+            border-radius: 8px;
+        }
+
+        .phone-stat {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 10px;
+            margin-bottom: 8px;
+        }
+
+        .phone-stat-label {
+            font-size: 12px;
+            color: var(--text-faint);
+        }
+
+        .phone-stat-value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .phone-stat-value.debt {
+            color: #F87171;
+        }
+
+        .phone-stat-value.fair {
+            color: var(--emerald);
+        }
+
+        @keyframes fade-up {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── Features ── */
+        .features {
+            padding: 100px 0;
+        }
+
+        .section-label {
+            font-family: 'Outfit', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--purple-soft);
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: clamp(32px, 4vw, 48px);
+            font-weight: 700;
+            letter-spacing: -1.5px;
+            line-height: 1.1;
+            margin-bottom: 16px;
+        }
+
+        .section-desc {
+            font-size: 17px;
+            color: var(--text-dim);
+            max-width: 520px;
+            margin-bottom: 56px;
+            line-height: 1.7;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 36px 32px;
+            transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--purple-glow), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--border-hover);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        .feature-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .feature-icon.purple {
+            background: rgba(124, 92, 252, 0.12);
+        }
+
+        .feature-icon.blue {
+            background: rgba(56, 189, 248, 0.12);
+        }
+
+        .feature-icon.emerald {
+            background: rgba(52, 211, 153, 0.12);
+        }
+
+        .feature-icon.teal {
+            background: rgba(45, 212, 191, 0.12);
+        }
+
+        .feature-card h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 10px;
+        }
+
+        .feature-card p {
+            font-size: 15px;
+            color: var(--text-dim);
+            line-height: 1.65;
+        }
+
+        /* ── How It Works ── */
+        .how-it-works {
+            padding: 100px 0;
+            position: relative;
+        }
+
+        .how-it-works::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(ellipse at center, rgba(124, 92, 252, 0.04) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 32px;
+            position: relative;
+        }
+
+        .steps::before {
+            content: '';
+            position: absolute;
+            top: 50px;
+            left: 16.66%;
+            right: 16.66%;
+            height: 2px;
+            background: linear-gradient(90deg, var(--purple), var(--blue), var(--emerald));
+            opacity: 0.2;
+        }
+
+        .step {
+            text-align: center;
+            position: relative;
+        }
+
+        .step-number {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Outfit', sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            margin: 0 auto 24px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .step:nth-child(1) .step-number {
+            background: linear-gradient(135deg, var(--purple), #5B3FD4);
+            color: white;
+            box-shadow: 0 0 30px var(--purple-glow);
+        }
+
+        .step:nth-child(2) .step-number {
+            background: linear-gradient(135deg, var(--blue), #0EA5E9);
+            color: white;
+            box-shadow: 0 0 30px var(--blue-glow);
+        }
+
+        .step:nth-child(3) .step-number {
+            background: linear-gradient(135deg, var(--emerald), #10B981);
+            color: var(--bg-deep);
+            box-shadow: 0 0 30px var(--emerald-glow);
+        }
+
+        .step-icon {
+            font-size: 32px;
+            margin-bottom: 16px;
+        }
+
+        .step h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+            margin-bottom: 10px;
+        }
+
+        .step p {
+            font-size: 15px;
+            color: var(--text-dim);
+            line-height: 1.6;
+            max-width: 280px;
+            margin: 0 auto;
+        }
+
+        /* ── Story Section ── */
+        .story {
+            padding: 100px 0;
+        }
+
+        .story-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 56px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .story-card::after {
+            content: '';
+            position: absolute;
+            top: -100px;
+            right: -100px;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(124, 92, 252, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .story-quote {
+            font-size: 28px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            line-height: 1.4;
+            letter-spacing: -0.5px;
+            margin-bottom: 24px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .story-quote .accent {
+            color: var(--purple-soft);
+        }
+
+        .story-text {
+            font-size: 16px;
+            color: var(--text-dim);
+            line-height: 1.8;
+            max-width: 640px;
+            margin-bottom: 32px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .story-author {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .story-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, var(--purple), var(--blue));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .story-name {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .story-role {
+            font-size: 14px;
+            color: var(--text-faint);
+        }
+
+        /* ── Waitlist ── */
+        .waitlist {
+            padding: 100px 0;
+            position: relative;
+        }
+
+        .waitlist-card {
+            background: linear-gradient(135deg, rgba(124, 92, 252, 0.08), rgba(56, 189, 248, 0.05));
+            border: 1px solid rgba(124, 92, 252, 0.15);
+            border-radius: 28px;
+            padding: 64px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .waitlist-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at top, rgba(124, 92, 252, 0.1) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .waitlist-card .section-title {
+            position: relative;
+            z-index: 2;
+        }
+
+        .waitlist-desc {
+            font-size: 17px;
+            color: var(--text-dim);
+            margin-bottom: 40px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .waitlist-form {
+            display: flex;
+            gap: 12px;
+            max-width: 480px;
+            margin: 0 auto 16px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .waitlist-form input[type="email"] {
+            flex: 1;
+            padding: 16px 20px;
+            background: var(--bg-deep);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .waitlist-form input[type="email"]::placeholder {
+            color: var(--text-faint);
+        }
+
+        .waitlist-form input[type="email"]:focus {
+            border-color: var(--purple);
+        }
+
+        .waitlist-form button {
+            padding: 16px 28px;
+            background: var(--emerald);
+            color: var(--bg-deep);
+            border: none;
+            border-radius: 14px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            white-space: nowrap;
+        }
+
+        .waitlist-form button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px var(--emerald-glow);
+        }
+
+        .waitlist-note {
+            font-size: 13px;
+            color: var(--text-faint);
+            position: relative;
+            z-index: 2;
+        }
+
+        /* ── Footer ── */
+        .footer {
+            padding: 48px 0;
+            border-top: 1px solid var(--border);
+        }
+
+        .footer .container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .footer-copy {
+            font-size: 14px;
+            color: var(--text-faint);
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 24px;
+        }
+
+        .footer-links a {
+            font-size: 14px;
+            color: var(--text-faint);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: var(--text-dim);
+        }
+
+        /* ── Scroll Reveal ── */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.7s ease, transform 0.7s ease;
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .reveal-delay-1 { transition-delay: 0.1s; }
+        .reveal-delay-2 { transition-delay: 0.2s; }
+        .reveal-delay-3 { transition-delay: 0.3s; }
+        .reveal-delay-4 { transition-delay: 0.4s; }
+
+        /* ── Responsive ── */
+        @media (max-width: 1024px) {
+            .hero-phone {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .steps {
+                grid-template-columns: 1fr;
+                gap: 48px;
+            }
+
+            .steps::before {
+                display: none;
+            }
+
+            .story-card {
+                padding: 36px 28px;
+            }
+
+            .story-quote {
+                font-size: 22px;
+            }
+
+            .waitlist-card {
+                padding: 40px 28px;
+            }
+
+            .waitlist-form {
+                flex-direction: column;
+            }
+
+            .hero-actions {
+                flex-direction: column;
+            }
+
+            .btn-primary, .btn-secondary {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .footer .container {
+                flex-direction: column;
+                gap: 16px;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 16px;
+            }
+
+            .hero {
+                padding: 100px 0 60px;
+            }
+
+            .features, .how-it-works, .story, .waitlist {
+                padding: 64px 0;
+            }
+        }
+
+        /* ── Reduced Motion ── */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+
+            html {
+                scroll-behavior: auto;
+            }
+
+            .reveal {
+                opacity: 1;
+                transform: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas class="stars-canvas" id="stars"></canvas>
+
+    <!-- Nav -->
+    <nav class="nav" id="nav">
+        <div class="container">
+            <a href="#" class="nav-logo">
+                <div class="nav-logo-icon">&#127769;</div>
+                <div class="nav-logo-text">Dad<span>Sleep</span></div>
+            </a>
+            <a href="#waitlist" class="nav-cta">Join Waitlist</a>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-glow"></div>
+        <div class="hero-glow-2"></div>
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <span class="hero-badge-dot"></span>
+                    Coming soon to iOS and Android
+                </div>
+                <h1>
+                    Your baby doesn't sleep.<br>
+                    <span class="highlight">Track the damage.</span>
+                </h1>
+                <p class="hero-sub">
+                    DadSleep is the first baby sleep tracker actually built for dads. One-tap logging for 3am, a sleep debt calculator that doesn't sugarcoat things, and a fairness meter to settle the "I always get up" debate.
+                </p>
+                <div class="hero-actions">
+                    <a href="#waitlist" class="btn-primary">
+                        Join the Waitlist
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </a>
+                    <a href="#testflight" class="btn-secondary">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" fill="currentColor"/></svg>
+                    TestFlight Early Access
+                    </a>
+                </div>
+            </div>
+
+            <!-- Phone mockup (desktop only) -->
+            <div class="hero-phone" aria-hidden="true">
+                <div class="phone-frame">
+                    <div class="phone-notch"></div>
+                    <div class="phone-screen">
+                        <div class="phone-time">3:47 AM</div>
+                        <div class="phone-btn">
+                            <span class="phone-btn-icon">&#127769;</span>
+                            <span class="phone-btn-text">Start Sleep</span>
+                        </div>
+                        <div class="phone-label">Tap to start tracking</div>
+                        <div class="phone-toggle">
+                            <div class="phone-toggle-btn active">Dad</div>
+                            <div class="phone-toggle-btn">Partner</div>
+                        </div>
+                        <div class="phone-stat">
+                            <span class="phone-stat-label">Sleep debt</span>
+                            <span class="phone-stat-value debt">-47h 12m</span>
+                        </div>
+                        <div class="phone-stat">
+                            <span class="phone-stat-label">Your share this week</span>
+                            <span class="phone-stat-value fair">62%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-label reveal">Features</div>
+            <h2 class="section-title reveal">Built for 3am, not 3pm</h2>
+            <p class="section-desc reveal">
+                Every other baby app looks like it was designed for a baby shower. Pink buttons, "mama mode", the works. DadSleep is the app you actually want to use at 3am with one eye open.
+            </p>
+
+            <div class="features-grid">
+                <div class="feature-card reveal reveal-delay-1">
+                    <div class="feature-icon purple">&#128076;</div>
+                    <h3>One-Tap Logging</h3>
+                    <p>Big buttons. High contrast. No scrolling through menus when you can barely keep your eyes open. Start tracking with a single tap, go back to whatever passes for sleep.</p>
+                </div>
+                <div class="feature-card reveal reveal-delay-2">
+                    <div class="feature-icon blue">&#128200;</div>
+                    <h3>Sleep Debt Calculator</h3>
+                    <p>See exactly how many hours you've lost since your baby arrived. It's a big number. Probably bigger than you think. But at least now you can wave it at people who say "sleep when the baby sleeps."</p>
+                </div>
+                <div class="feature-card reveal reveal-delay-3">
+                    <div class="feature-icon emerald">&#9878;&#65039;</div>
+                    <h3>The Fairness Meter</h3>
+                    <p>Who's actually getting up more? Stop guessing, start tracking. The fairness meter shows the split between you and your partner. Data doesn't lie (even at 4am).</p>
+                </div>
+                <div class="feature-card reveal reveal-delay-4">
+                    <div class="feature-icon teal">&#128274;</div>
+                    <h3>Offline and Private</h3>
+                    <p>All your data stays on your phone. No accounts to create, no cloud sync, no one selling your baby's sleep patterns to advertisers. Just you and your data.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-it-works">
+        <div class="container">
+            <div class="section-label reveal" style="text-align:center">How it works</div>
+            <h2 class="section-title reveal" style="text-align:center;margin-bottom:56px">Three steps. That's it.</h2>
+
+            <div class="steps">
+                <div class="step reveal reveal-delay-1">
+                    <div class="step-number">1</div>
+                    <div class="step-icon">&#128564;</div>
+                    <h3>Baby wakes up. Again.</h3>
+                    <p>It's 3am. You hear the cry. You know the drill by now. Grab your phone from the nightstand.</p>
+                </div>
+                <div class="step reveal reveal-delay-2">
+                    <div class="step-number">2</div>
+                    <div class="step-icon">&#128529;</div>
+                    <h3>Tap the big button.</h3>
+                    <p>One tap starts tracking. Go handle the situation. When you're done, tap again. That's the whole workflow.</p>
+                </div>
+                <div class="step reveal reveal-delay-3">
+                    <div class="step-number">3</div>
+                    <div class="step-icon">&#128526;</div>
+                    <h3>Check the stats.</h3>
+                    <p>Sleep debt, weekly trends, the fairness meter. Show your partner. Or don't. Up to you really.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Story -->
+    <section class="story">
+        <div class="container">
+            <div class="story-card reveal">
+                <div class="story-quote">
+                    "Every baby app I tried had <span class="accent">pink flowers and 'mama' language</span>. I just wanted to know if I was doing my fair share of night feeds."
+                </div>
+                <p class="story-text">
+                    I built DadSleep because I got tired of tracking my daughter's sleep in a Notes app at 4am. The existing baby trackers are fine, but they're clearly not built with dads in mind. I don't need a "mama community" or pastel colour schemes. I need a big button, some stats, and proof I'm pulling my weight.
+                </p>
+                <p class="story-text">
+                    It's early days. Just me building this between naps (mine, not the baby's). But if you're a dad who's been through the same thing, or you're about to be, I think you'll get it. Some folks on r/daddit have been helping shape what this turns into.
+                </p>
+                <div class="story-author">
+                    <div class="story-avatar">&#128104;</div>
+                    <div>
+                        <div class="story-name">Tom</div>
+                        <div class="story-role">Dad, developer, very tired</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Waitlist -->
+    <section class="waitlist" id="waitlist">
+        <div class="container">
+            <div class="waitlist-card reveal">
+                <h2 class="section-title" style="text-align:center;margin-bottom:12px">Get notified when we launch</h2>
+                <p class="waitlist-desc">
+                    Drop your email and I'll let you know when DadSleep is ready. No spam, no newsletters about "parenting journeys". Just a heads-up when it hits the App Store.
+                </p>
+                <form class="waitlist-form" id="waitlistForm">
+                    <input type="email" name="email" placeholder="your@email.com" required aria-label="Email address">
+                    <button type="submit">Notify Me</button>
+                </form>
+                <p class="waitlist-note" id="waitlistNote">We'll only email you once. Probably.</p>
+                <div id="waitlistSuccess" style="display:none;color:#c4b5fd;font-size:1.1rem;padding:20px 0">You're on the list. We'll be in touch when DadSleep launches.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-copy">&copy; 2026 DadSleep. Built between naps.</div>
+            <div class="footer-links">
+                <a href="#privacy">Privacy</a>
+                <a href="#terms">Terms</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Stars background
+        (function() {
+            const canvas = document.getElementById('stars');
+            const ctx = canvas.getContext('2d');
+            let stars = [];
+            const STAR_COUNT = 80;
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+
+            function init() {
+                resize();
+                stars = [];
+                for (let i = 0; i < STAR_COUNT; i++) {
+                    stars.push({
+                        x: Math.random() * canvas.width,
+                        y: Math.random() * canvas.height,
+                        size: Math.random() * 1.5 + 0.5,
+                        opacity: Math.random() * 0.5 + 0.2,
+                        speed: Math.random() * 0.15 + 0.02,
+                        phase: Math.random() * Math.PI * 2
+                    });
+                }
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                const time = Date.now() * 0.001;
+
+                stars.forEach(function(s) {
+                    const flicker = Math.sin(time * s.speed * 5 + s.phase) * 0.3 + 0.7;
+                    ctx.beginPath();
+                    ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(148, 163, 184, ' + (s.opacity * flicker) + ')';
+                    ctx.fill();
+                });
+
+                requestAnimationFrame(draw);
+            }
+
+            window.addEventListener('resize', resize);
+            init();
+            draw();
+        })();
+
+        // Nav scroll effect
+        (function() {
+            var nav = document.getElementById('nav');
+            var scrolled = false;
+
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 40 && !scrolled) {
+                    nav.classList.add('scrolled');
+                    scrolled = true;
+                } else if (window.scrollY <= 40 && scrolled) {
+                    nav.classList.remove('scrolled');
+                    scrolled = false;
+                }
+            });
+        })();
+
+        // Scroll reveal
+        (function() {
+            var reveals = document.querySelectorAll('.reveal');
+            var observer = new IntersectionObserver(function(entries) {
+                entries.forEach(function(entry) {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+            reveals.forEach(function(el) {
+                observer.observe(el);
+            });
+        })();
+        // Waitlist form
+        (function() {
+            var form = document.getElementById('waitlistForm');
+            var success = document.getElementById('waitlistSuccess');
+            var note = document.getElementById('waitlistNote');
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                var email = form.querySelector('input[type="email"]').value;
+                var btn = form.querySelector('button');
+                btn.textContent = 'Joining...';
+                btn.disabled = true;
+                fetch('https://mcplist.site/api/waitlist', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email, source: 'dadsleep' })
+                })
+                .then(function(r) { return r.json(); })
+                .then(function() {
+                    form.style.display = 'none';
+                    note.style.display = 'none';
+                    success.style.display = 'block';
+                })
+                .catch(function() {
+                    btn.textContent = 'Notify Me';
+                    btn.disabled = false;
+                    alert('Something went wrong. Please try again.');
+                });
+            });
+        })();
+    </script>
+</body>
+</html>
